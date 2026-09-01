@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Caffenol Darkroom</title>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: #333;
+    --text: #e8e8e8;
+    --text-dim: #999;
+    --accent: #c4a35a;          /* warm coffee gold */
+    --accent-dim: #8a7340;
+    --success: #6b9e6b;
+    --warning: #c47a3a;
+    --danger: #c45a5a;
+    --timer: #e8d5a3;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .app {
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 16px;
+    padding-bottom: 80px;
+  }
+
+  header {
+    text-align: center;
+    padding: 20px 0 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  header h1 {
+    font-size: 1.55rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+  }
+
+  header p {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 20px;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 12px 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .tab.active {
+    background: var(--surface2);
+    color: var(--accent);
+  }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .card h2 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  select, input[type="number"], input[type="text"] {
+    width: 100%;
+    padding: 11px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 1rem;
+    margin-bottom: 14px;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  select:focus, input:focus {
+    outline: none;
+    border-color: var(--accent-dim);
+  }
+
+  .row {
+    display: flex;
+    gap: 12px;
+  }
+
+  .row > div { flex: 1; }
+
+  /* Recipe results */
+  .ingredients {
+    list-style: none;
+  }
+
+  .ingredients li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 1.05rem;
+  }
+
+  .ingredients li:last-child { border-bottom: none; }
+
+  .ing-name { color: var(--text); }
+  .ing-amount {
+    font-weight: 600;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .note {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    line-height: 1.5;
+  }
+
+  /* Times table */
+  .times-list {
+    list-style: none;
+  }
+
+  .time-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .time-item:last-child { border-bottom: none; }
+  .time-item:active { background: var(--surface2); }
+
+  .time-film {
+    font-weight: 500;
+    font-size: 1rem;
+  }
+
+  .time-meta {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  .time-value {
+    float: right;
+    font-weight: 600;
+    color: var(--accent);
+    font-size: 1.05rem;
+  }
+
+  /* Timer */
+  .timer-display {
+    text-align: center;
+    padding: 24px 0 16px;
+  }
+
+  .timer-time {
+    font-size: 4.2rem;
+    font-weight: 300;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+    color: var(--timer);
+    line-height: 1;
+  }
+
+  .timer-time.warning { color: var(--warning); }
+  .timer-time.danger { color: var(--danger); }
+
+  .timer-status {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    margin-top: 8px;
+    min-height: 1.3em;
+  }
+
+  .timer-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #1a1208;
+  }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-danger {
+    background: var(--danger);
+    color: #fff;
+  }
+
+  .presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .preset {
+    padding: 8px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .preset.active {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .agitation-note {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    background: var(--surface2);
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-top: 12px;
+    line-height: 1.45;
+  }
+
+  /* Volume chips */
+  .volume-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .chip {
+    padding: 8px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .chip.active {
+    border-color: var(--accent);
+    background: rgba(196, 163, 90, 0.12);
+    color: var(--accent);
+  }
+
+  footer {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 24px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Keep screen on while timer runs */
+  .wake-lock-note {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Caffenol Darkroom</h1>
+    <p>Recipes · Times · Timer</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="recipes">Recipes</button>
+    <button class="tab" data-tab="times">Times</button>
+    <button class="tab" data-tab="timer">Timer</button>
+  </div>
+
+  <!-- RECIPES PANEL -->
+  <div id="panel-recipes" class="panel active">
+    <div class="card">
+      <h2>Recipe</h2>
+      <label for="recipe-select">Formula</label>
+      <select id="recipe-select">
+        <option value="CM">Caffenol CM</option>
+        <option value="Delta">Caffenol Delta</option>
+        <option value="PD">Caffenol PD (Push)</option>
+      </select>
+
+      <label>Water volume</label>
+      <div class="volume-chips" id="volume-chips">
+        <button class="chip active" data-ml="300">300 ml</button>
+        <button class="chip" data-ml="350">350 ml</button>
+        <button class="chip" data-ml="500">500 ml</button>
+        <button class="chip" data-ml="600">600 ml</button>
+        <button class="chip" data-ml="1000">1000 ml</button>
+      </div>
+
+      <label for="custom-volume">Or enter custom volume (ml)</label>
+      <input type="number" id="custom-volume" min="50" max="5000" step="10" placeholder="e.g. 250">
+    </div>
+
+    <div class="card">
+      <h2>Ingredients <span id="volume-label" style="font-weight:400;color:var(--text-dim);font-size:0.85rem"></span></h2>
+      <ul class="ingredients" id="ingredients-list"></ul>
+      <div class="note" id="recipe-notes"></div>
+    </div>
+  </div>
+
+  <!-- TIMES PANEL -->
+  <div id="panel-times" class="panel">
+    <div class="card">
+      <h2>Standard Developing Times</h2>
+      <label for="film-filter">Filter by film</label>
+      <select id="film-filter">
+        <option value="">All films</option>
+      </select>
+      <ul class="times-list" id="times-list"></ul>
+    </div>
+  </div>
+
+  <!-- TIMER PANEL -->
+  <div id="panel-timer" class="panel">
+    <div class="card">
+      <h2>Darkroom Timer</h2>
+
+      <label>Quick set from your times</label>
+      <div class="presets" id="timer-presets"></div>
+
+      <div class="row">
+        <div>
+          <label for="timer-min">Minutes</label>
+          <input type="number" id="timer-min" min="0" max="99" value="14">
+        </div>
+        <div>
+          <label for="timer-sec">Seconds</label>
+          <input type="number" id="timer-sec" min="0" max="59" value="0">
+        </div>
+      </div>
+
+      <div class="timer-display">
+        <div class="timer-time" id="timer-display">14:00</div>
+        <div class="timer-status" id="timer-status">Ready</div>
+      </div>
+
+      <div class="timer-controls">
+        <button class="btn btn-primary" id="btn-start">Start</button>
+        <button class="btn btn-secondary" id="btn-pause" disabled>Pause</button>
+        <button class="btn btn-danger" id="btn-reset">Reset</button>
+      </div>
+
+      <div class="agitation-note" id="agitation-note">
+        Default CM agitation: 5 inversions at start, then 3 every 30 seconds.
+      </div>
+
+      <p class="wake-lock-note" id="wake-lock-status"></p>
+    </div>
+
+    <div class="card">
+      <h2>Timer behaviour</h2>
+      <p style="font-size:0.9rem;color:var(--text-dim);line-height:1.5">
+        • Beep every 30 seconds<br>
+        • Five warning beeps in the final 10 seconds<br>
+        • Final long beep at 0:00
+      </p>
+    </div>
+  </div>
+
+  <footer>
+    Data from your Caffenol spreadsheet · Works offline
+  </footer>
+</div>
+
+<script>
+// ========== DATA ==========
+const RECIPES = {
+  CM: {
+    name: "Caffenol CM",
+    base: { water: 1000, soda: 54, vitC: 16, kbr: 1, salt: 10, coffee: 40 },
+    notes: "Add ingredients to water in order listed. Use either KBr or iodized salt, not both. If using non-iodized salt, double the amount. Prefer robusta beans."
+  },
+  Delta: {
+    name: "Caffenol Delta",
+    base: { water: 1000, soda: 24, vitC: 20, coffee: 45 },
+    notes: "No restrainer. Add ingredients to water in order listed. Prefer robusta beans."
+  },
+  PD: {
+    name: "Caffenol PD (Push)",
+    base: { water: 1000, soda: 40, vitC: 20, kbr: 1, salt: 10, coffee: 40 },
+    notes: "Push developer. Add ingredients to water in order listed. Use either KBr or iodized salt, not both. If using non-iodized salt, double the amount."
+  }
+};
+
+const STANDARD_TIMES = [
+  { film: "Kentmere 100", ei: 100, recipe: "CM", time: "14:00", seconds: 14*60, notes: "" },
+  { film: "Kentmere 200", ei: 200, recipe: "CM", time: "15:00", seconds: 15*60, notes: "" },
+  { film: "Kentmere 400", ei: 400, recipe: "CM", time: "17:00", seconds: 17*60, notes: "" },
+  { film: "Kentmere 400", ei: 1600, recipe: "PD", time: "30:00", seconds: 30*60, notes: "1 min continuous, then 10 s every 4 min" },
+  { film: "Ilford HP5+", ei: 400, recipe: "CM", time: "15:00", seconds: 15*60, notes: "Confirm this" },
+  { film: "Ilford HP5+", ei: 1600, recipe: "PD", time: "28:00", seconds: 28*60, notes: "1 min continuous, then 10 s every 4 min" },
+  { film: "Ilford Delta 100", ei: 100, recipe: "CM", time: "14:00", seconds: 14*60, notes: "" },
+  { film: "Ilford Pan F Plus", ei: 50, recipe: "CM", time: "12:00", seconds: 12*60, notes: "" },
+  { film: "Ilford FP4 Plus", ei: 125, recipe: "CM", time: "14:00", seconds: 14*60, notes: "" }
+];
+
+// ========== AUDIO (Web Audio API) ==========
+let audioCtx = null;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+
+function beep(freq = 880, duration = 0.12, type = "sine", volume = 0.35) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(volume, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  } catch (e) { /* silent fail if audio blocked */ }
+}
+
+function intervalBeep() { beep(720, 0.15, "sine", 0.4); }
+function warningBeep() { beep(1100, 0.18, "square", 0.45); }
+function finalBeep() {
+  beep(660, 0.5, "sine", 0.5);
+  setTimeout(() => beep(880, 0.6, "sine", 0.5), 350);
+}
+
+// ========== RECIPE LOGIC ==========
+let currentVolume = 300;
+
+function scaleRecipe(recipeKey, ml) {
+  const base = RECIPES[recipeKey].base;
+  const factor = ml / base.water;
+  const result = { water: ml };
+  for (const [k, v] of Object.entries(base)) {
+    if (k === "water") continue;
+    // round to 2 decimals, but show cleanly
+    result[k] = Math.round(v * factor * 100) / 100;
+  }
+  return result;
+}
+
+function formatAmount(val) {
+  if (Number.isInteger(val)) return val.toString();
+  return val.toFixed(2).replace(/\.?0+$/, "");
+}
+
+function renderRecipe() {
+  const key = document.getElementById("recipe-select").value;
+  const recipe = RECIPES[key];
+  const amounts = scaleRecipe(key, currentVolume);
+
+  document.getElementById("volume-label").textContent = `(${currentVolume} ml)`;
+
+  const list = document.getElementById("ingredients-list");
+  list.innerHTML = "";
+
+  const order = [
+    { key: "water", label: "Water" },
+    { key: "soda", label: "Washing Soda" },
+    { key: "vitC", label: "Vitamin C" },
+    { key: "kbr", label: "KBr (optional)" },
+    { key: "salt", label: "Iodized Salt (optional)" },
+    { key: "coffee", label: "Coffee" }
+  ];
+
+  for (const item of order) {
+    if (amounts[item.key] === undefined) continue;
+    const li = document.createElement("li");
+    const unit = item.key === "water" ? "ml" : "g";
+    li.innerHTML = `<span class="ing-name">${item.label}</span>
+                    <span class="ing-amount">${formatAmount(amounts[item.key])} ${unit}</span>`;
+    list.appendChild(li);
+  }
+
+  document.getElementById("recipe-notes").textContent = recipe.notes;
+}
+
+// ========== TIMES ==========
+function populateFilmFilter() {
+  const films = [...new Set(STANDARD_TIMES.map(t => t.film))].sort();
+  const sel = document.getElementById("film-filter");
+  films.forEach(f => {
+    const opt = document.createElement("option");
+    opt.value = f;
+    opt.textContent = f;
+    sel.appendChild(opt);
+  });
+}
+
+function renderTimes() {
+  const filter = document.getElementById("film-filter").value;
+  const list = document.getElementById("times-list");
+  list.innerHTML = "";
+
+  const items = filter
+    ? STANDARD_TIMES.filter(t => t.film === filter)
+    : STANDARD_TIMES;
+
+  items.forEach(t => {
+    const li = document.createElement("li");
+    li.className = "time-item";
+    li.innerHTML = `
+      <span class="time-value">${t.time}</span>
+      <div class="time-film">${t.film}</div>
+      <div class="time-meta">EI ${t.ei} · ${t.recipe}${t.notes ? " · " + t.notes : ""}</div>
+    `;
+    li.addEventListener("click", () => {
+      // switch to timer and set time
+      document.querySelector('.tab[data-tab="timer"]').click();
+      setTimerFromSeconds(t.seconds);
+      updateAgitationNote(t);
+    });
+    list.appendChild(li);
+  });
+}
+
+function updateAgitationNote(t) {
+  const note = document.getElementById("agitation-note");
+  if (t.recipe === "PD") {
+    note.textContent = "PD agitation: First minute continuous, then 10 seconds every 4 minutes.";
+  } else {
+    note.textContent = "CM agitation: 5 inversions at start, then 3 every 30 seconds.";
+  }
+}
+
+// ========== TIMER ==========
+let totalSeconds = 14 * 60;
+let remaining = totalSeconds;
+let timerId = null;
+let isRunning = false;
+let lastIntervalBeepAt = null;
+let warningBeepsDone = 0;
+let wakeLock = null;
+
+function formatTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function updateDisplay() {
+  const el = document.getElementById("timer-display");
+  el.textContent = formatTime(remaining);
+  el.classList.remove("warning", "danger");
+  if (remaining <= 10 && remaining > 0) el.classList.add("danger");
+  else if (remaining <= 60) el.classList.add("warning");
+}
+
+function setTimerFromSeconds(sec) {
+  totalSeconds = sec;
+  remaining = sec;
+  lastIntervalBeepAt = null;
+  warningBeepsDone = 0;
+  document.getElementById("timer-min").value = Math.floor(sec / 60);
+  document.getElementById("timer-sec").value = sec % 60;
+  updateDisplay();
+  document.getElementById("timer-status").textContent = "Ready";
+  stopTimer(false);
+}
+
+function tick() {
+  if (remaining <= 0) {
+    remaining = 0;
+    updateDisplay();
+    finalBeep();
+    document.getElementById("timer-status").textContent = "Done!";
+    stopTimer(true);
+    return;
+  }
+
+  remaining--;
+  updateDisplay();
+
+  // Interval beeps every 30 s (at 30, 60, 90... remaining)
+  // We beep when remaining is a multiple of 30 and > 10 (so final 10 s is reserved for warnings)
+  if (remaining > 10 && remaining % 30 === 0) {
+    intervalBeep();
+    document.getElementById("timer-status").textContent = "30-second mark";
+  }
+
+  // Final 10 seconds: five warning beeps (at 10, 8, 6, 4, 2)
+  if (remaining <= 10 && remaining > 0 && remaining % 2 === 0) {
+    warningBeep();
+    document.getElementById("timer-status").textContent = `Final ${remaining}s`;
+  }
+
+  if (remaining > 10 && remaining % 30 !== 0) {
+    document.getElementById("timer-status").textContent = "Running…";
+  }
+}
+
+function startTimer() {
+  if (isRunning) return;
+  // read current inputs
+  const m = parseInt(document.getElementById("timer-min").value) || 0;
+  const s = parseInt(document.getElementById("timer-sec").value) || 0;
+  if (!timerId) { // only reset remaining if freshly starting
+    totalSeconds = m * 60 + s;
+    remaining = totalSeconds;
+  }
+  if (remaining <= 0) return;
+
+  isRunning = true;
+  document.getElementById("btn-start").disabled = true;
+  document.getElementById("btn-pause").disabled = false;
+  document.getElementById("timer-status").textContent = "Running…";
+  updateDisplay();
+
+  // initial beep
+  intervalBeep();
+
+  timerId = setInterval(tick, 1000);
+  requestWakeLock();
+}
+
+function pauseTimer() {
+  if (!isRunning) return;
+  isRunning = false;
+  clearInterval(timerId);
+  timerId = null;
+  document.getElementById("btn-start").disabled = false;
+  document.getElementById("btn-pause").disabled = true;
+  document.getElementById("timer-status").textContent = "Paused";
+  releaseWakeLock();
+}
+
+function stopTimer(finished) {
+  isRunning = false;
+  clearInterval(timerId);
+  timerId = null;
+  document.getElementById("btn-start").disabled = false;
+  document.getElementById("btn-pause").disabled = true;
+  if (!finished) {
+    remaining = totalSeconds;
+    updateDisplay();
+  }
+  releaseWakeLock();
+}
+
+function resetTimer() {
+  stopTimer(false);
+  const m = parseInt(document.getElementById("timer-min").value) || 0;
+  const s = parseInt(document.getElementById("timer-sec").value) || 0;
+  totalSeconds = m * 60 + s;
+  remaining = totalSeconds;
+  lastIntervalBeepAt = null;
+  warningBeepsDone = 0;
+  updateDisplay();
+  document.getElementById("timer-status").textContent = "Ready";
+}
+
+// Wake Lock (keeps screen on)
+async function requestWakeLock() {
+  try {
+    if ("wakeLock" in navigator) {
+      wakeLock = await navigator.wakeLock.request("screen");
+      document.getElementById("wake-lock-status").textContent = "Screen will stay on while timer runs";
+      wakeLock.addEventListener("release", () => {
+        document.getElementById("wake-lock-status").textContent = "";
+      });
+    }
+  } catch (e) { /* ignore */ }
+}
+
+function releaseWakeLock() {
+  if (wakeLock) {
+    wakeLock.release();
+    wakeLock = null;
+  }
+  document.getElementById("wake-lock-status").textContent = "";
+}
+
+// ========== UI WIRING ==========
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+  });
+});
+
+document.getElementById("recipe-select").addEventListener("change", renderRecipe);
+
+document.getElementById("volume-chips").addEventListener("click", e => {
+  const chip = e.target.closest(".chip");
+  if (!chip) return;
+  document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+  chip.classList.add("active");
+  currentVolume = parseInt(chip.dataset.ml);
+  document.getElementById("custom-volume").value = "";
+  renderRecipe();
+});
+
+document.getElementById("custom-volume").addEventListener("input", e => {
+  const val = parseInt(e.target.value);
+  if (val >= 50) {
+    currentVolume = val;
+    document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+    renderRecipe();
+  }
+});
+
+document.getElementById("film-filter").addEventListener("change", renderTimes);
+
+document.getElementById("btn-start").addEventListener("click", () => {
+  getAudioCtx(); // unlock audio on user gesture
+  startTimer();
+});
+document.getElementById("btn-pause").addEventListener("click", pauseTimer);
+document.getElementById("btn-reset").addEventListener("click", resetTimer);
+
+["timer-min", "timer-sec"].forEach(id => {
+  document.getElementById(id).addEventListener("change", () => {
+    if (!isRunning) resetTimer();
+  });
+});
+
+// Populate timer presets
+function renderPresets() {
+  const container = document.getElementById("timer-presets");
+  STANDARD_TIMES.forEach(t => {
+    const btn = document.createElement("button");
+    btn.className = "preset";
+    btn.textContent = `${t.film} ${t.ei} (${t.time})`;
+    btn.addEventListener("click", () => {
+      setTimerFromSeconds(t.seconds);
+      updateAgitationNote(t);
+      document.querySelectorAll(".preset").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+    });
+    container.appendChild(btn);
+  });
+}
+
+// Init
+populateFilmFilter();
+renderRecipe();
+renderTimes();
+renderPresets();
+updateDisplay();
+</script>
+</body>
+</html>
